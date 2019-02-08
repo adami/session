@@ -72,6 +72,7 @@ var defer = typeof setImmediate === 'function'
  * @param {Object} [options]
  * @param {Object} [options.cookie] Options for cookie
  * @param {Function} [options.genid]
+ * @param {Function} [options.genCookieOptions]
  * @param {String} [options.name=connect.sid] Session ID cookie name
  * @param {Boolean} [options.proxy]
  * @param {Boolean} [options.resave] Resave unmodified sessions back to the store
@@ -118,6 +119,10 @@ function session(options) {
     throw new TypeError('genid option must be a function');
   }
 
+  if (opts.genCookieOptions && typeof opts.genCookieOptions !== 'function') {
+    throw new TypeError('genCookieOptions option must be a function');
+  }
+
   if (resaveSession === undefined) {
     deprecate('undefined resave option; provide resave option');
     resaveSession = true;
@@ -158,7 +163,7 @@ function session(options) {
   store.generate = function(req){
     req.sessionID = generateId(req);
     req.session = new Session(req);
-    req.session.cookie = new Cookie(cookieOptions);
+    req.session.cookie = new Cookie(opts.genCookieOptions ? opts.genCookieOptions(req) : cookieOptions);
 
     if (cookieOptions.secure === 'auto') {
       req.session.cookie.secure = issecure(req, trustProxy);
